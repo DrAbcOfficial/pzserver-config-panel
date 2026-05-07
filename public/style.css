@@ -1495,6 +1495,7 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
   left: 0;
   top: 100%;
   z-index: 1000;
+  max-width: 320px;
   background-color: var(--color-tooltip-bg);
   border: 1px solid var(--color-tooltip-border);
   border-radius: 6px;
@@ -1502,7 +1503,8 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--color-tooltip-text);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
   box-shadow: 0 4px 12px var(--color-shadow-tooltip);
   line-height: 1.6;
   margin-top: 4px;
