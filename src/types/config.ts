@@ -37,11 +37,18 @@ export type SubMod = {
   id: string;
   description: string;
   poster: string;
+  icon: string;
   path: string;
+  require: string[];
+  category: string[];
+  loadModBefore: string[];
+  loadModAfter: string[];
+  incompatible: string[];
 };
 
 export type WorkshopItem = {
   id: string;
   isDownloaded: boolean;
   subMods: SubMod[];
+  maps: string[];
 };

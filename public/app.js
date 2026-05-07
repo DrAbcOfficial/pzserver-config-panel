@@ -140,6 +140,7 @@ function renderConfig() {
   renderMods();
   renderWorkshopItems();
   renderMap();
+  renderAvailableMaps();
 }
 
 function renderNormalItems() {
@@ -245,8 +246,10 @@ function renderWorkshopItems() {
   const container = document.getElementById("workshopItemsList");
   container.innerHTML = "";
 
+  const modMeta = getModMetaMap();
+
   workshopItemsItems.forEach((itemId, index) => {
-    const workshopItem = workshopItemsData.find((wi) => wi.id === itemId) || { id: itemId, isDownloaded: false, subMods: [] };
+    const workshopItem = workshopItemsData.find((wi) => wi.id === itemId) || { id: itemId, isDownloaded: false, subMods: [], maps: [] };
     const div = document.createElement("div");
     div.className = "workshop-item";
 
@@ -308,6 +311,15 @@ function renderWorkshopItems() {
         const subModDiv = document.createElement("div");
         subModDiv.className = "submod-item";
 
+        if (subMod.icon) {
+          const iconImg = document.createElement("img");
+          iconImg.className = "submod-icon";
+          iconImg.src = "/api/workshop-poster?rel=" + encodeURIComponent(subMod.icon);
+          iconImg.alt = "";
+          iconImg.onerror = function() { this.style.display = "none"; };
+          subModDiv.appendChild(iconImg);
+        }
+
         if (subMod.poster) {
           const posterImg = document.createElement("img");
           posterImg.className = "submod-poster";
@@ -337,6 +349,46 @@ function renderWorkshopItems() {
         idDiv.textContent = "ID: " + subMod.id;
         infoDiv.appendChild(idDiv);
 
+        if (subMod.category && subMod.category.length > 0) {
+          const tagsDiv = document.createElement("div");
+          tagsDiv.className = "submod-categories";
+          subMod.category.forEach((cat) => {
+            const tag = document.createElement("span");
+            tag.className = "category-tag";
+            tag.textContent = cat;
+            tagsDiv.appendChild(tag);
+          });
+          infoDiv.appendChild(tagsDiv);
+        }
+
+        if (subMod.require && subMod.require.length > 0) {
+          const reqDiv = document.createElement("div");
+          reqDiv.className = "submod-meta-item require";
+          reqDiv.innerHTML = '<span class="meta-label">依赖:</span> ' + escapeHtml(subMod.require.join(", "));
+          infoDiv.appendChild(reqDiv);
+        }
+
+        if (subMod.loadModBefore && subMod.loadModBefore.length > 0) {
+          const beforeDiv = document.createElement("div");
+          beforeDiv.className = "submod-meta-item load-before";
+          beforeDiv.innerHTML = '<span class="meta-label">需在之前:</span> ' + escapeHtml(subMod.loadModBefore.join(", "));
+          infoDiv.appendChild(beforeDiv);
+        }
+
+        if (subMod.loadModAfter && subMod.loadModAfter.length > 0) {
+          const afterDiv = document.createElement("div");
+          afterDiv.className = "submod-meta-item load-after";
+          afterDiv.innerHTML = '<span class="meta-label">需在之后:</span> ' + escapeHtml(subMod.loadModAfter.join(", "));
+          infoDiv.appendChild(afterDiv);
+        }
+
+        if (subMod.incompatible && subMod.incompatible.length > 0) {
+          const incDiv = document.createElement("div");
+          incDiv.className = "submod-meta-item incompatible";
+          incDiv.innerHTML = '<span class="meta-label">不兼容:</span> ' + escapeHtml(subMod.incompatible.join(", "));
+          infoDiv.appendChild(incDiv);
+        }
+
         const toggleDiv = document.createElement("div");
         toggleDiv.className = "submod-toggle";
         
@@ -355,29 +407,36 @@ function renderWorkshopItems() {
         toggleInput.onchange = function() {
           const isChecked = this.checked;
           const submodId = this.dataset.submodId;
-          
+
           if (isChecked) {
+            ensureDependencies(submodId);
+
             const exists = modsItems.some(modId => {
               const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
               return cleanModId === submodId;
             });
-            
+
             if (!exists) {
               const hasBackslash = modsItems.some(modId => modId.startsWith("\\"));
               const modIdToAdd = hasBackslash ? "\\" + submodId : submodId;
               modsItems.push(modIdToAdd);
             }
+
+            const conflicts = checkAllIncompatibilities(submodId);
+            if (conflicts.length > 0) {
+              showToast("警告: 与以下模组不兼容: " + conflicts.join(", "), "error");
+            }
           } else {
-            const index = modsItems.findIndex(modId => {
+            const idx = modsItems.findIndex(modId => {
               const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
               return cleanModId === submodId;
             });
-            
-            if (index !== -1) {
-              modsItems.splice(index, 1);
+
+            if (idx !== -1) {
+              modsItems.splice(idx, 1);
             }
           }
-          
+
           renderMods();
         };
         
@@ -404,13 +463,92 @@ function renderMap() {
   renderListEditor("mapList", mapItems, "Map");
 }
 
+function buildModMetaMap() {
+  const map = {};
+  for (const wi of workshopItemsData) {
+    for (const sm of wi.subMods) {
+      map[sm.id] = sm;
+    }
+  }
+  return map;
+}
+
+function getModMetaMap() {
+  return buildModMetaMap();
+}
+
 function renderListEditor(containerId, items, type) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
 
+  const modMeta = getModMetaMap();
+  const allAvailableMaps = new Set();
+  for (const wi of workshopItemsData) {
+    if (wi.maps) {
+      for (const m of wi.maps) {
+        allAvailableMaps.add(m);
+      }
+    }
+  }
+
   items.forEach((item, index) => {
     const div = document.createElement("div");
     div.className = "list-item";
+    div.draggable = true;
+    div.dataset.index = index;
+    div.dataset.type = type;
+
+    let isOrphan = false;
+    if (type === "Mods") {
+      const cleanModId = item.startsWith("\\") ? item.substring(1) : item;
+      isOrphan = !modMeta[cleanModId];
+    } else if (type === "Map") {
+      isOrphan = !allAvailableMaps.has(item);
+    }
+
+    if (isOrphan) {
+      div.classList.add("orphan-item");
+    }
+
+    div.addEventListener("dragstart", function(e) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", JSON.stringify({ type: type, index: index }));
+      this.classList.add("dragging");
+    });
+
+    div.addEventListener("dragend", function(e) {
+      this.classList.remove("dragging");
+      document.querySelectorAll(".list-item").forEach(function(el) {
+        el.classList.remove("drag-over");
+      });
+    });
+
+    div.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      this.classList.add("drag-over");
+    });
+
+    div.addEventListener("dragleave", function(e) {
+      this.classList.remove("drag-over");
+    });
+
+    div.addEventListener("drop", function(e) {
+      e.preventDefault();
+      this.classList.remove("drag-over");
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      const fromIndex = parseInt(data.index);
+      const toIndex = parseInt(this.dataset.index);
+      if (data.type === type && fromIndex !== toIndex && !isNaN(fromIndex) && !isNaN(toIndex)) {
+        dragReorderItems(type, fromIndex, toIndex);
+      }
+    });
+
+    const dragHandle = document.createElement("span");
+    dragHandle.className = "drag-handle";
+    dragHandle.textContent = "⋮⋮";
+    dragHandle.title = "拖动排序";
+    div.appendChild(dragHandle);
 
     const indexSpan = document.createElement("span");
     indexSpan.className = "list-item-index";
@@ -539,6 +677,332 @@ function moveListItem(type, index, direction) {
     mapItems[index + direction] = temp;
     renderMap();
   }
+}
+
+function dragReorderItems(type, fromIndex, toIndex) {
+  let array;
+  if (type === "Mods") {
+    array = modsItems;
+  } else if (type === "WorkshopItems") {
+    array = workshopItemsItems;
+  } else if (type === "Map") {
+    array = mapItems;
+  } else {
+    return;
+  }
+
+  const [moved] = array.splice(fromIndex, 1);
+  array.splice(toIndex, 0, moved);
+
+  if (type === "Mods") {
+    renderMods();
+  } else if (type === "WorkshopItems") {
+    renderWorkshopItems();
+  } else if (type === "Map") {
+    renderMap();
+  }
+}
+
+function ensureDependencies(submodId, visited) {
+  if (!visited) visited = new Set();
+  if (visited.has(submodId)) return;
+  visited.add(submodId);
+
+  const modMeta = getModMetaMap();
+  const meta = modMeta[submodId];
+  if (!meta || !meta.require) return;
+
+  for (const depId of meta.require) {
+    const cleanDep = depId.startsWith("\\") ? depId.substring(1) : depId;
+    const isEnabled = modsItems.some(function(m) {
+      return (m.startsWith("\\") ? m.substring(1) : m) === cleanDep;
+    });
+    if (!isEnabled) {
+      const hasBackslash = modsItems.some(function(m) { return m.startsWith("\\"); }) || depId.startsWith("\\");
+      const addId = hasBackslash ? "\\" + cleanDep : cleanDep;
+      modsItems.push(addId);
+    }
+    ensureDependencies(cleanDep, visited);
+  }
+}
+
+function checkModIncompatibilities(submodId) {
+  var conflicts = [];
+  var modMeta = getModMetaMap();
+  var meta = modMeta[submodId];
+  if (meta && meta.incompatible) {
+    for (var i = 0; i < meta.incompatible.length; i++) {
+      var incId = meta.incompatible[i];
+      var cleanInc = incId.startsWith("\\") ? incId.substring(1) : incId;
+      var isEnabled = modsItems.some(function(m) {
+        return (m.startsWith("\\") ? m.substring(1) : m) === cleanInc;
+      });
+      if (isEnabled) conflicts.push(cleanInc);
+    }
+  }
+  return conflicts;
+}
+
+function checkReverseIncompatibilities(submodId) {
+  var conflicts = [];
+  var modMeta = getModMetaMap();
+  var keys = Object.keys(modMeta);
+  for (var i = 0; i < keys.length; i++) {
+    var modId = keys[i];
+    var meta = modMeta[modId];
+    if (!meta.incompatible) continue;
+    var isEnabled = modsItems.some(function(m) {
+      return (m.startsWith("\\") ? m.substring(1) : m) === modId;
+    });
+    if (!isEnabled) continue;
+    for (var j = 0; j < meta.incompatible.length; j++) {
+      var incId = meta.incompatible[j];
+      var cleanInc = incId.startsWith("\\") ? incId.substring(1) : incId;
+      if (cleanInc === submodId) {
+        conflicts.push(modId);
+        break;
+      }
+    }
+  }
+  return conflicts;
+}
+
+function checkAllIncompatibilities(submodId) {
+  var direct = checkModIncompatibilities(submodId);
+  var reverse = checkReverseIncompatibilities(submodId);
+  var all = direct.slice();
+  for (var i = 0; i < reverse.length; i++) {
+    if (all.indexOf(reverse[i]) === -1) all.push(reverse[i]);
+  }
+  return all;
+}
+
+function autoSortMods() {
+  var modMeta = getModMetaMap();
+  var modSet = {};
+  var allModIds = [];
+
+  for (var i = 0; i < modsItems.length; i++) {
+    var clean = modsItems[i].startsWith("\\") ? modsItems[i].substring(1) : modsItems[i];
+    if (!modSet[clean]) {
+      modSet[clean] = true;
+      allModIds.push(clean);
+    }
+  }
+
+  var inDegree = {};
+  var adj = {};
+
+  for (var i = 0; i < allModIds.length; i++) {
+    var modId = allModIds[i];
+    inDegree[modId] = 0;
+    adj[modId] = [];
+  }
+
+  for (var i = 0; i < allModIds.length; i++) {
+    var modId = allModIds[i];
+    var meta = modMeta[modId];
+    if (!meta) continue;
+
+    if (meta.require) {
+      for (var j = 0; j < meta.require.length; j++) {
+        var depId = meta.require[j];
+        var cleanDep = depId.startsWith("\\") ? depId.substring(1) : depId;
+        if (modSet[cleanDep]) {
+          adj[cleanDep] = adj[cleanDep] || [];
+          adj[cleanDep].push(modId);
+          inDegree[modId] = (inDegree[modId] || 0) + 1;
+        }
+      }
+    }
+
+    if (meta.loadModBefore) {
+      for (var j = 0; j < meta.loadModBefore.length; j++) {
+        var targetId = meta.loadModBefore[j];
+        var cleanTarget = targetId.startsWith("\\") ? targetId.substring(1) : targetId;
+        if (modSet[cleanTarget]) {
+          adj[modId] = adj[modId] || [];
+          adj[modId].push(cleanTarget);
+          inDegree[cleanTarget] = (inDegree[cleanTarget] || 0) + 1;
+        }
+      }
+    }
+
+    if (meta.loadModAfter) {
+      for (var j = 0; j < meta.loadModAfter.length; j++) {
+        var targetId = meta.loadModAfter[j];
+        var cleanTarget = targetId.startsWith("\\") ? targetId.substring(1) : targetId;
+        if (modSet[cleanTarget]) {
+          adj[cleanTarget] = adj[cleanTarget] || [];
+          adj[cleanTarget].push(modId);
+          inDegree[modId] = (inDegree[modId] || 0) + 1;
+        }
+      }
+    }
+  }
+
+  var queue = [];
+  for (var i = 0; i < allModIds.length; i++) {
+    var modId = allModIds[i];
+    if ((inDegree[modId] || 0) === 0) {
+      queue.push(modId);
+    }
+  }
+  queue.sort();
+
+  var sorted = [];
+  while (queue.length > 0) {
+    var current = queue.shift();
+    sorted.push(current);
+    var neighbors = adj[current] || [];
+    for (var i = 0; i < neighbors.length; i++) {
+      var neighbor = neighbors[i];
+      inDegree[neighbor]--;
+      if (inDegree[neighbor] === 0) {
+        queue.push(neighbor);
+      }
+    }
+    queue.sort();
+  }
+
+  if (sorted.length !== allModIds.length) {
+    var missing = [];
+    for (var i = 0; i < allModIds.length; i++) {
+      if (sorted.indexOf(allModIds[i]) === -1) missing.push(allModIds[i]);
+    }
+    showToast("检测到循环依赖，以下模组无法排序: " + missing.join(", "), "error");
+    for (var i = 0; i < missing.length; i++) {
+      sorted.push(missing[i]);
+    }
+  }
+
+  var originalMap = {};
+  for (var i = 0; i < modsItems.length; i++) {
+    var modId = modsItems[i];
+    var clean = modId.startsWith("\\") ? modId.substring(1) : modId;
+    if (!originalMap[clean]) originalMap[clean] = modId;
+  }
+
+  var newMods = [];
+  for (var i = 0; i < sorted.length; i++) {
+    newMods.push(originalMap[sorted[i]] || sorted[i]);
+  }
+
+  modsItems = newMods;
+  renderMods();
+
+  var modsList = document.getElementById("modsList");
+  if (modsList) {
+    modsList.classList.add("sorting");
+    setTimeout(function() { modsList.classList.remove("sorting"); }, 1500);
+  }
+
+  var allConflicts = [];
+  for (var i = 0; i < allModIds.length; i++) {
+    var c = checkModIncompatibilities(allModIds[i]);
+    for (var j = 0; j < c.length; j++) {
+      var pair = [allModIds[i], c[j]].sort().join(" ↔ ");
+      if (allConflicts.indexOf(pair) === -1) allConflicts.push(pair);
+    }
+  }
+  if (allConflicts.length > 0) {
+    showToast("警告: 检测到不兼容的模组同时启用: " + allConflicts.join("; "), "error");
+  } else {
+    showToast("模组已自动排序", "success");
+  }
+}
+
+function renderAvailableMaps() {
+  var section = document.getElementById("availableMapsSection");
+  var list = document.getElementById("availableMapsList");
+  list.innerHTML = "";
+
+  var mapSet = {};
+  for (var i = 0; i < mapItems.length; i++) {
+    mapSet[mapItems[i]] = true;
+  }
+
+  var foundMaps = {};
+  for (var i = 0; i < workshopItemsData.length; i++) {
+    var wi = workshopItemsData[i];
+    if (!wi.isDownloaded || !wi.maps) continue;
+    for (var j = 0; j < wi.maps.length; j++) {
+      var mapName = wi.maps[j];
+      if (!foundMaps[mapName]) {
+        foundMaps[mapName] = [];
+      }
+      foundMaps[mapName].push(wi.id);
+    }
+  }
+
+  var mapNames = Object.keys(foundMaps);
+  if (mapNames.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  section.style.display = "block";
+
+  for (var i = 0; i < mapNames.length; i++) {
+    var mapName = mapNames[i];
+    var sourceIds = foundMaps[mapName];
+    var isEnabled = mapSet[mapName];
+
+    var item = document.createElement("div");
+    item.className = "available-map-item" + (isEnabled ? " enabled" : "");
+
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "available-map-name";
+    nameSpan.textContent = mapName;
+    item.appendChild(nameSpan);
+
+    var sourceSpan = document.createElement("span");
+    sourceSpan.className = "available-map-source";
+    sourceSpan.textContent = "来自: " + sourceIds.join(", ");
+    item.appendChild(sourceSpan);
+
+    var toggleBtn = document.createElement("button");
+    toggleBtn.className = "map-toggle-btn " + (isEnabled ? "enabled" : "disabled");
+    toggleBtn.textContent = isEnabled ? "已启用" : "启用";
+    toggleBtn.onclick = function(map, btn) {
+      return function() {
+        toggleMapItem(map);
+
+        var currentlyEnabled = false;
+        for (var k = 0; k < mapItems.length; k++) {
+          if (mapItems[k] === map) { currentlyEnabled = true; break; }
+        }
+        var allItems = list.querySelectorAll(".available-map-item");
+        for (var k = 0; k < allItems.length; k++) {
+          if (allItems[k].querySelector(".available-map-name").textContent === map) {
+            if (currentlyEnabled) {
+              allItems[k].classList.add("enabled");
+            } else {
+              allItems[k].classList.remove("enabled");
+            }
+            var b = allItems[k].querySelector(".map-toggle-btn");
+            if (b) {
+              b.textContent = currentlyEnabled ? "已启用" : "启用";
+              b.className = "map-toggle-btn " + (currentlyEnabled ? "enabled" : "disabled");
+            }
+          }
+        }
+      };
+    }(mapName);
+    item.appendChild(toggleBtn);
+
+    list.appendChild(item);
+  }
+}
+
+function toggleMapItem(mapName) {
+  var idx = mapItems.indexOf(mapName);
+  if (idx !== -1) {
+    mapItems.splice(idx, 1);
+  } else {
+    mapItems.push(mapName);
+  }
+  renderMap();
 }
 
 function gatherConfigItems() {
@@ -1040,7 +1504,7 @@ function switchTab(tabName) {
   document.querySelector(`.tab-button[data-tab="${tabName}"]`).classList.add("active");
   document.getElementById(`${tabName}-tab`).classList.add("active");
   
-  if (tabName === "config") {
+  if (tabName === "config" || tabName === "mods") {
     loadConfig();
   }
 }
@@ -1085,6 +1549,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   // 保存配置
   document.getElementById("saveButton").addEventListener("click", saveConfig);
+
+  // 自动排序
+  var autoSortBtn = document.getElementById("autoSortBtn");
+  if (autoSortBtn) {
+    autoSortBtn.addEventListener("click", autoSortMods);
+  }
   
   // 服务器控制
   document.getElementById("startServerBtn").addEventListener("click", startServer);

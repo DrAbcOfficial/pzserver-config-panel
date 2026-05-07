@@ -101,6 +101,7 @@ async function buildWorkshopItems(
       id,
       isDownloaded: false,
       subMods: [],
+      maps: [],
     }));
   }
 

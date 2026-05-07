@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, basename } from "node:path";
 import { existsSync } from "node:fs";
 import type { WorkshopItem, SubMod } from "../types/config.js";
 
@@ -11,8 +11,8 @@ function hasWindowsDrivePrefix(p: string): boolean {
   return /^[a-zA-Z]:[\\/]/.test(p);
 }
 
-function resolvePosterFilePath(folderPath: string, posterValue: string): string {
-  const trimmed = posterValue.trim().replace(/^"|"$/g, "").replace(/^'|'$/g, "");
+function resolveMediaFilePath(folderPath: string, mediaValue: string): string {
+  const trimmed = mediaValue.trim().replace(/^"|"$/g, "").replace(/^'|'$/g, "");
   if (!trimmed) return "";
 
   if (isAbsolute(trimmed) || hasWindowsDrivePrefix(trimmed)) {
@@ -23,9 +23,26 @@ function resolvePosterFilePath(folderPath: string, posterValue: string): string 
   return join(folderPath, ...segments);
 }
 
+function resolveRelativePath(workshopRootPath: string, folderPath: string, mediaValue: string): string {
+  const rootAbs = resolve(workshopRootPath);
+  const filePath = mediaValue ? resolveMediaFilePath(folderPath, mediaValue) : "";
+  const absolutePath = filePath ? resolve(filePath) : "";
+  const relToRoot = absolutePath ? toUrlPath(relative(rootAbs, absolutePath)) : "";
+  const isUnderRoot = !!relToRoot && relToRoot !== ".." && !relToRoot.startsWith("../");
+  const exists = absolutePath && isUnderRoot && existsSync(absolutePath);
+  return exists ? relToRoot : "";
+}
+
+function parseCommaList(value: string): string[] {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 function parseModInfo(content: string, folderPath: string, workshopRootPath: string): SubMod | null {
   const lines = content.split(/\r?\n/);
-  const result: Partial<SubMod> = {};
+  const result: Record<string, string> = {};
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -41,23 +58,32 @@ function parseModInfo(content: string, folderPath: string, workshopRootPath: str
     if (key === "id") result.id = value;
     if (key === "description") result.description = value;
     if (key === "poster") result.poster = value;
+    if (key === "icon") result.icon = value;
+    if (key === "require") result.require = value;
+    if (key === "category") result.category = value;
+    if (key === "loadModBefore") result.loadModBefore = value;
+    if (key === "loadModAfter") result.loadModAfter = value;
+    if (key === "incompatible") result.incompatible = value;
   }
 
   if (!result.name || !result.id) return null;
 
+  const posterRel = resolveRelativePath(workshopRootPath, folderPath, result.poster ?? "");
+  const iconRel = resolveRelativePath(workshopRootPath, folderPath, result.icon ?? "");
   const rootAbs = resolve(workshopRootPath);
-  const posterFilePath = result.poster ? resolvePosterFilePath(folderPath, result.poster) : "";
-  const posterAbs = posterFilePath ? resolve(posterFilePath) : "";
-  const posterRelToRoot = posterAbs ? toUrlPath(relative(rootAbs, posterAbs)) : "";
-  const isPosterUnderRoot = !!posterRelToRoot && posterRelToRoot !== ".." && !posterRelToRoot.startsWith("../");
-  const hasPoster = posterAbs && isPosterUnderRoot && existsSync(posterAbs);
 
   return {
     name: result.name,
     id: result.id,
     description: result.description ?? "",
-    poster: hasPoster ? posterRelToRoot : "",
+    poster: posterRel,
+    icon: iconRel,
     path: toUrlPath(relative(rootAbs, resolve(folderPath))),
+    require: parseCommaList(result.require ?? ""),
+    category: parseCommaList(result.category ?? ""),
+    loadModBefore: parseCommaList(result.loadModBefore ?? ""),
+    loadModAfter: parseCommaList(result.loadModAfter ?? ""),
+    incompatible: parseCommaList(result.incompatible ?? ""),
   };
 }
 
@@ -91,6 +117,42 @@ async function findModInfoFiles(dirPath: string): Promise<Array<{ path: string; 
   return modInfoFiles;
 }
 
+async function findModMaps(itemPath: string): Promise<string[]> {
+  const maps: Set<string> = new Set();
+
+  async function search(currentPath: string) {
+    try {
+      const entries = await readdir(currentPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const fullPath = join(currentPath, entry.name);
+
+        const dirName = entry.name.toLowerCase();
+        if (dirName === "maps" && basename(currentPath).toLowerCase() === "media") {
+          try {
+            const subEntries = await readdir(fullPath, { withFileTypes: true });
+            for (const subEntry of subEntries) {
+              if (subEntry.isDirectory()) {
+                maps.add(subEntry.name);
+              }
+            }
+          } catch {
+            // skip
+          }
+        } else {
+          await search(fullPath);
+        }
+      }
+    } catch {
+      // skip
+    }
+  }
+
+  await search(itemPath);
+  return [...maps];
+}
+
 async function parseWorkshopItem(workshopPath: string, itemId: string): Promise<WorkshopItem> {
   const itemPath = join(workshopPath, itemId);
   const isDownloaded = existsSync(itemPath);
@@ -100,6 +162,7 @@ async function parseWorkshopItem(workshopPath: string, itemId: string): Promise<
       id: itemId,
       isDownloaded: false,
       subMods: [],
+      maps: [],
     };
   }
 
@@ -123,11 +186,13 @@ async function parseWorkshopItem(workshopPath: string, itemId: string): Promise<
   }
 
   const subMods = Array.from(subModsMap.values()).map(({ subMod }) => subMod);
+  const maps = await findModMaps(itemPath);
 
   return {
     id: itemId,
     isDownloaded: true,
     subMods,
+    maps,
   };
 }
 

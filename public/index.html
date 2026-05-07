@@ -170,6 +170,7 @@
     <div class="tab-navigation">
       <button class="tab-button active" data-tab="console">控制台</button>
       <button class="tab-button" data-tab="config">配置管理</button>
+      <button class="tab-button" data-tab="mods">模组配置</button>
       <button class="tab-button" data-tab="paths">全局设置</button>
     </div>
 
@@ -233,14 +234,15 @@
     </div>
 
     <div class="tab-content" id="config-tab">
-      <div class="main-content">
-        <div class="left-column">
-          <section id="normalItems" class="config-section">
-            <h2>普通配置项</h2>
-            <div id="normalItemsList" class="items-list"></div>
-          </section>
-        </div>
-        <div class="right-column">
+      <section id="normalItems" class="config-section">
+        <h2>普通配置项</h2>
+        <div id="normalItemsList" class="items-list"></div>
+      </section>
+    </div>
+
+    <div class="tab-content" id="mods-tab">
+      <div class="mods-layout">
+        <div class="mods-main-column">
           <section id="workshopItemsSection" class="config-section">
             <div class="section-header">
               <h2>WorkshopItems (创意工坊)</h2>
@@ -253,8 +255,9 @@
               <div id="workshopItemsList" class="list-editor"></div>
             </div>
           </section>
-
-          <section id="modsSection" class="config-section">
+        </div>
+        <div class="mods-list-columns">
+          <section id="modsSection" class="config-section mods-list-item">
             <div class="section-header">
               <h2>Mods (模组)</h2>
               <button class="collapse-button" data-target="modsContent">▼</button>
@@ -262,12 +265,12 @@
             <div id="modsContent" class="section-content">
               <div class="list-controls">
                 <button class="add-button" data-type="Mods">添加</button>
+                <button id="autoSortBtn" class="auto-sort-button" title="根据依赖关系自动排序模组">自动排序</button>
               </div>
               <div id="modsList" class="list-editor"></div>
             </div>
           </section>
-
-          <section id="mapSection" class="config-section">
+          <section id="mapSection" class="config-section mods-list-item">
             <div class="section-header">
               <h2>Map (地图)</h2>
               <button class="collapse-button" data-target="mapContent">▼</button>
@@ -277,6 +280,10 @@
                 <button class="add-button" data-type="Map">添加</button>
               </div>
               <div id="mapList" class="list-editor"></div>
+              <div id="availableMapsSection" class="available-maps-section" style="display:none;">
+                <div class="available-maps-header">快速添加地图</div>
+                <div id="availableMapsList" class="available-maps-list"></div>
+              </div>
             </div>
           </section>
         </div>
