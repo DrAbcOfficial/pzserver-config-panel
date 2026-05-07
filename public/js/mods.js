@@ -149,10 +149,10 @@ export function renderWorkshopItems() {
         }
         infoDiv.appendChild(nameDiv);
 
-        if (subMod.description) {
+        if (subMod.descriptionHtml) {
           const descDiv = document.createElement("div");
           descDiv.className = "submod-description";
-          descDiv.textContent = subMod.description;
+          descDiv.innerHTML = subMod.descriptionHtml;
           infoDiv.appendChild(descDiv);
         }
 

@@ -1521,6 +1521,60 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
   word-break: break-word;
 }
 
+/* PZ description tag styles */
+.submod-description .pz-h1 {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0.5rem 0;
+  color: var(--color-text-primary);
+}
+
+.submod-description .pz-h2 {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  text-align: left;
+  margin: 0.375rem 0;
+  color: var(--color-text-primary);
+}
+
+.submod-description .pz-size-small  { font-size: 0.6875rem; }
+.submod-description .pz-size-medium { font-size: 0.875rem; }
+.submod-description .pz-size-large  { font-size: 1.0625rem; }
+
+.submod-description .pz-align-left   { display: block; text-align: left; }
+.submod-description .pz-align-centre { display: block; text-align: center; }
+.submod-description .pz-align-right  { display: block; text-align: right; }
+
+.submod-description .pz-image {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  margin: 0.25rem 0;
+}
+
+.submod-description .pz-image-centre {
+  text-align: center;
+  margin: 0.375rem 0;
+}
+
+.submod-description .pz-image-centre img {
+  max-width: 100%;
+  height: auto;
+}
+
+.submod-description .pz-joypad {
+  display: inline-block;
+  padding: 0.0625rem 0.375rem;
+  margin: 0 0.125rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
 .submod-id {
   font-size: 0.75rem;
   color: var(--color-submod-id-text);
