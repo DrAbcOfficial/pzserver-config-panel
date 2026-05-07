@@ -87,8 +87,17 @@ V2 会自动从 `paths-config.json` 迁移配置：
 
 ## 安装
 
+支持 npm / yarn / pnpm 三种包管理器：
+
 ```bash
+# npm
 npm install
+
+# yarn
+yarn install
+
+# pnpm
+pnpm install
 ```
 
 ## 运行前准备
@@ -104,7 +113,14 @@ cp servers-config.json.example servers-config.json
 ## 构建
 
 ```bash
+# npm
 npm run build
+
+# yarn
+yarn build
+
+# pnpm
+pnpm build
 ```
 
 ## 运行
@@ -112,13 +128,27 @@ npm run build
 ### 开发模式
 
 ```bash
-npm run dev -- [--config /path/to/server.ini]
+# npm
+npm run dev
+
+# yarn
+yarn dev
+
+# pnpm
+pnpm dev
 ```
 
 ### 生产模式
 
 ```bash
-npm start -- [--config /path/to/server.ini] [--port 3000]
+# npm
+npm start
+
+# yarn
+yarn start
+
+# pnpm
+pnpm start
 ```
 
 ### 参数说明
@@ -229,5 +259,19 @@ ssh -L 3000:127.0.0.1:3000 user@your-server-ip
 ## 依赖
 
 - Node.js >= 18
+- 包管理器：npm / yarn / pnpm（任选其一）
 - 运行时：express
 - 开发时：typescript, tsx, vitest
+
+## 测试
+
+```bash
+# npm
+npm test
+
+# yarn
+yarn test
+
+# pnpm
+pnpm test
+```
