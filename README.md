@@ -102,6 +102,12 @@ pnpm install
 
 ## 运行前准备
 
+### 开发模式（零配置启动）
+
+直接运行 `npm run dev`，首次启动会自动创建 `servers-config.json` 并注册 `dev-data/dummy.ini` 作为默认实例。
+
+### 生产部署
+
 1. 复制示例配置文件：
 
 ```bash

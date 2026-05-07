@@ -1,4 +1,4 @@
-import { basename, isAbsolute } from "node:path";
+import { basename, isAbsolute, resolve } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { AppError } from "../errors/app-error.js";
 import type { ServerInstance, ServersConfig, ServerGlobalConfig } from "../types/server.js";
@@ -534,10 +534,13 @@ export async function loadServersConfig(
   const legacyConfig = normalizeLegacyPathsConfig(rawLegacyConfig);
   const migratedConfig = createMigratedConfig(legacyConfig, options.cliConfigPath);
 
-  if (rawLegacyConfig !== null || migratedConfig.servers.length > 0) {
-    await writeServersConfigFile(migratedConfig, serversConfigPath);
+  if (migratedConfig.servers.length === 0) {
+    const dummyIniPath = resolve("dev-data", "dummy.ini");
+    const usedIds = new Set<string>();
+    migratedConfig.servers.push(createServerFromIniPath(dummyIniPath, usedIds));
   }
 
+  await writeServersConfigFile(migratedConfig, serversConfigPath);
   return migratedConfig;
 }
 
