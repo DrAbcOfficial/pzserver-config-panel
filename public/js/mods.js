@@ -24,7 +24,6 @@ function getModMetaMap() {
 
 function buildSubModTooltip(subMod) {
   const lines = [];
-  lines.push('<span class="tt-label">ID:</span> ' + escapeHtml(subMod.id));
   if (subMod.author) lines.push('<span class="tt-label">作者:</span> ' + escapeHtml(subMod.author));
   if (subMod.url) lines.push('<span class="tt-label">主页:</span> <a class="tt-link" href="' + escapeHtml(subMod.url) + '" target="_blank" rel="noopener">' + escapeHtml(subMod.url) + '</a>');
   if (subMod.modversion) lines.push('<span class="tt-label">版本:</span> ' + escapeHtml(subMod.modversion));
