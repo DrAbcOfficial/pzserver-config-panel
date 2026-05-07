@@ -251,6 +251,7 @@ export function renderWorkshopItems() {
           }
 
           renderMods();
+          state.isDirty = true;
         };
 
         const toggleSpan = document.createElement("span");
@@ -439,6 +440,7 @@ function toggleMapItem(mapName) {
   } else {
     state.mapItems.push(mapName);
   }
+  state.isDirty = true;
   renderMap();
 }
 
@@ -463,14 +465,39 @@ function moveListItem(type, index, direction) {
   const temp = arr[index];
   arr[index] = arr[index + direction];
   arr[index + direction] = temp;
+  state.isDirty = true;
   rerenderByType(type);
 }
 
 function deleteListItem(type, index) {
   const arr = getItemsArray(type);
   if (!arr) return;
+
+  if (type === "WorkshopItems") {
+    const itemId = arr[index];
+    const workshopItem = state.workshopItemsData.find((wi) => wi.id === itemId);
+    if (workshopItem) {
+      for (const subMod of workshopItem.subMods) {
+        const mi = state.modsItems.findIndex((m) => {
+          const clean = m.startsWith("\\") ? m.substring(1) : m;
+          return clean === subMod.id;
+        });
+        if (mi !== -1) state.modsItems.splice(mi, 1);
+      }
+      for (const mapName of workshopItem.maps) {
+        const mi = state.mapItems.indexOf(mapName);
+        if (mi !== -1) state.mapItems.splice(mi, 1);
+      }
+    }
+  }
+
   arr.splice(index, 1);
+  markDirty();
   rerenderByType(type);
+  if (type === "WorkshopItems") {
+    renderMods();
+    renderMap();
+  }
 }
 
 function dragReorderItems(type, fromIndex, toIndex) {
@@ -478,6 +505,7 @@ function dragReorderItems(type, fromIndex, toIndex) {
   if (!arr) return;
   const [moved] = arr.splice(fromIndex, 1);
   arr.splice(toIndex, 0, moved);
+  state.isDirty = true;
   rerenderByType(type);
 }
 
@@ -536,6 +564,7 @@ export function confirmAddItem() {
     renderMap();
   }
 
+  state.isDirty = true;
   hideDialog();
 }
 

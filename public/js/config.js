@@ -37,20 +37,6 @@ const ITEM_GROUPS = {
   }
 };
 
-export async function loadConfig() {
-  try {
-    if (!state.currentServerId) {
-      showToast("未选择服务器实例", "error");
-      return;
-    }
-    state.configData = await fetchConfig(state.currentServerId);
-    renderConfig();
-  } catch (error) {
-    showToast("配置加载失败: " + error.message, "error");
-    console.error(error);
-  }
-}
-
 export function renderConfig() {
   if (!state.configData) return;
 
@@ -169,6 +155,7 @@ function renderItemGroup(container, groupKey, groupName, items) {
       input.type = "checkbox";
       input.checked = item.value === "true";
       input.dataset.key = item.key;
+      input.addEventListener("change", () => { state.isDirty = true; });
       toggle.appendChild(input);
 
       const span = document.createElement("span");
@@ -183,6 +170,7 @@ function renderItemGroup(container, groupKey, groupName, items) {
       input.className = "item-input";
       input.value = item.value;
       input.dataset.key = item.key;
+      input.addEventListener("input", () => { state.isDirty = true; });
       div.appendChild(input);
     }
 
@@ -221,6 +209,7 @@ export async function saveConfigHandler() {
   try {
     const items = gatherConfigItems();
     await saveConfigAPI(state.currentServerId, items);
+    state.isDirty = false;
     showToast("保存成功", "success");
     await loadConfig();
   } catch (error) {
@@ -228,6 +217,45 @@ export async function saveConfigHandler() {
     console.error(error);
   } finally {
     saveButton.disabled = false;
+  }
+}
+
+let _autoSaving = false;
+
+async function autoSave() {
+  if (!state.currentServerId || !state.isDirty || _autoSaving) return;
+  _autoSaving = true;
+  try {
+    const items = gatherConfigItems();
+    await saveConfigAPI(state.currentServerId, items);
+    state.isDirty = false;
+  } catch {
+    // silent on auto-save failure
+  } finally {
+    _autoSaving = false;
+  }
+}
+
+let _autoSaveTimer = null;
+
+function startAutoSave() {
+  if (_autoSaveTimer) return;
+  _autoSaveTimer = setInterval(autoSave, 30000);
+}
+
+export async function loadConfig() {
+  try {
+    if (!state.currentServerId) {
+      showToast("未选择服务器实例", "error");
+      return;
+    }
+    state.configData = await fetchConfig(state.currentServerId);
+    state.isDirty = false;
+    renderConfig();
+    startAutoSave();
+  } catch (error) {
+    showToast("配置加载失败: " + error.message, "error");
+    console.error(error);
   }
 }
 

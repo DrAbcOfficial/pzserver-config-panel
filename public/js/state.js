@@ -15,4 +15,6 @@ export const state = {
   commandSuggestions: [],
   selectedSuggestionIndex: -1,
   autoScroll: true,
+
+  isDirty: false,
 };
