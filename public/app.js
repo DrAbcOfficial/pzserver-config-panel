@@ -335,6 +335,14 @@ function renderWorkshopItems() {
         const nameDiv = document.createElement("div");
         nameDiv.className = "submod-name";
         nameDiv.textContent = subMod.name;
+        const tooltipText = buildSubModTooltip(subMod);
+        if (tooltipText) {
+          nameDiv.classList.add("has-tooltip");
+          const tooltipDiv = document.createElement("div");
+          tooltipDiv.className = "submod-tooltip";
+          tooltipDiv.innerHTML = tooltipText;
+          nameDiv.appendChild(tooltipDiv);
+        }
         infoDiv.appendChild(nameDiv);
 
         if (subMod.description) {
@@ -1473,6 +1481,18 @@ async function saveGlobalConfig() {
 }
 
 // ===== 工具函数 =====
+
+function buildSubModTooltip(subMod) {
+  const lines = [];
+  if (subMod.author) lines.push('<span class="tt-label">作者:</span> ' + escapeHtml(subMod.author));
+  if (subMod.url) lines.push('<span class="tt-label">主页:</span> <a class="tt-link" href="' + escapeHtml(subMod.url) + '" target="_blank" rel="noopener">' + escapeHtml(subMod.url) + '</a>');
+  if (subMod.modversion) lines.push('<span class="tt-label">版本:</span> ' + escapeHtml(subMod.modversion));
+  if (subMod.pack && subMod.pack.length > 0) lines.push('<span class="tt-label">Pack:</span> ' + escapeHtml(subMod.pack.join(", ")));
+  if (subMod.tiledef && subMod.tiledef.length > 0) lines.push('<span class="tt-label">Tiledef:</span> ' + escapeHtml(subMod.tiledef.join(", ")));
+  if (subMod.versionMin) lines.push('<span class="tt-label">最低版本:</span> ' + escapeHtml(subMod.versionMin));
+  if (subMod.versionMax) lines.push('<span class="tt-label">最高版本:</span> ' + escapeHtml(subMod.versionMax));
+  return lines.length > 0 ? lines.join("<br>") : "";
+}
 
 function escapeHtml(text) {
   if (!text) return "";

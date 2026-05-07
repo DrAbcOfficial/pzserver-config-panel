@@ -1195,6 +1195,50 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   color: #ffffff;
   word-break: break-word;
+  position: relative;
+  display: inline-block;
+}
+
+.submod-name.has-tooltip {
+  cursor: help;
+  border-bottom: 1px dotted #888;
+}
+
+.submod-tooltip {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 1000;
+  background-color: #303030;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #ccc;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.submod-tooltip .tt-label {
+  color: #90caf9;
+  font-weight: 600;
+}
+
+.submod-tooltip .tt-link {
+  color: #64b5f6;
+  text-decoration: underline;
+}
+
+.submod-tooltip .tt-link:hover {
+  color: #90caf9;
+}
+
+.submod-name.has-tooltip:hover .submod-tooltip {
+  display: block;
 }
 
 .submod-description {

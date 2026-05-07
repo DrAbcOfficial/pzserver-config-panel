@@ -1,6 +1,6 @@
 # Project Zomboid 服务器配置管理面板 (V2)
 
-用于在 Linux 游戏服务器上运行配置管理后端，通过 SSH Tunnel 提供本地网页面板访问。V2 版本新增多实例管理、终端控制和单活运行模式。
+基于 Node.js 的 Web 配置管理面板，支持跨平台（Windows / macOS / Linux），通过浏览器管理 PZ 服务器的 INI 配置、模组和终端。
 
 ## 功能
 
@@ -19,7 +19,8 @@
 - Mods/WorkshopItems 列表控件（增删改、排序）
 - 保存配置（含备份、锁、格式规范化）
 - 普通配置项按类别分组展示，支持折叠；`true/false` 自动渲染为开关
-- WorkshopItems 自动解析：从 Workshop 文件夹读取 `mod.info`，展示子模组信息/海报，并可一键同步到 Mods
+- WorkshopItems 自动解析：从 Workshop 文件夹读取 `mod.info`，展示子模组信息（名称、海报、图标、描述、作者、版本、依赖、兼容性、Pack/Tiledef 等）并可一键同步到 Mods
+- 模组名称悬停提示：鼠标悬停在模组名称上，显示作者、主页链接、版本、Pack、Tiledef、版本要求等详细信息
 
 ## V2 配置文件
 
@@ -162,6 +163,14 @@ V2 采用「单活运行」设计：
 - 同时仅允许 1 个实例处于 `starting/running/stopping` 状态
 - 这是为了简化运维复杂度，避免资源冲突
 - 若需同时运行多个服务器，请使用多个面板实例
+
+## 跨平台支持
+
+面板支持在以下操作系统运行：
+
+- **Windows** — 支持绝对路径（如 `C:\path\to\server.ini`），进程管理使用 `taskkill`
+- **macOS** — 完整支持，路径处理与 Linux 一致
+- **Linux** — 主要目标平台，支持进程组信号管理
 
 ## 远程访问（SSH Tunnel）
 

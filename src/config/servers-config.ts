@@ -60,6 +60,13 @@ function isValidStartScriptPath(scriptPath: string): boolean {
   return isAbsolute(scriptPath);
 }
 
+function quotePath(path: string): string {
+  if (path.includes(" ") && !path.startsWith('"')) {
+    return `"${path}"`;
+  }
+  return path;
+}
+
 function ensureValidIniPath(iniPath: string, fieldName: string): void {
   if (!isValidIniPath(iniPath)) {
     throw new AppError(
@@ -550,6 +557,7 @@ export function generateServerId(name: string, existingIds: Set<string>): string
 }
 
 export function buildStartCommand(globalConfig: ServerGlobalConfig, server: ServerInstance): string {
+  const scriptPath = quotePath(globalConfig.startScriptPath);
   const args = server.startArgs.join(" ");
-  return `${globalConfig.startScriptPath} ${args}`.trim();
+  return `${scriptPath} ${args}`.trim();
 }
