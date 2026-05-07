@@ -2,7 +2,6 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, basename } from "node:path";
 import { existsSync } from "node:fs";
 import type { WorkshopItem, SubMod } from "../types/config.js";
-import { parseDescriptionTags } from "./description-parser.js";
 
 function toUrlPath(p: string): string {
   return p.replace(/\\/g, "/");
@@ -86,14 +85,10 @@ function parseModInfo(content: string, folderPath: string, workshopRootPath: str
   const loadModAfterList = parseCommaList(result.loadModAfter ?? "").filter((s) => s !== modId);
   const incompatibleList = parseCommaList(result.incompatible ?? "").filter((s) => s !== modId);
 
-  const descriptionRaw = result.description ?? "";
-  const descriptionHtml = parseDescriptionTags(descriptionRaw, folderPath, workshopRootPath);
-
   return {
     name: result.name,
     id: modId,
-    description: descriptionRaw,
-    descriptionHtml,
+    description: result.description ?? "",
     poster: posterRel,
     icon: iconRel,
     path: toUrlPath(relative(rootAbs, resolve(folderPath))),

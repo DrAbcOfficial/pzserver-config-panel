@@ -36,7 +36,6 @@ export type SubMod = {
   name: string;
   id: string;
   description: string;
-  descriptionHtml: string;
   poster: string;
   icon: string;
   path: string;

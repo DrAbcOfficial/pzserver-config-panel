@@ -1,5 +1,6 @@
 import { state } from "./state.js";
 import { showToast, escapeHtml } from "./utils.js";
+import { parseDescriptionTags } from "./description-parser.js";
 
 let currentAddType = null;
 
@@ -149,10 +150,11 @@ export function renderWorkshopItems() {
         }
         infoDiv.appendChild(nameDiv);
 
-        if (subMod.descriptionHtml) {
+        if (subMod.description) {
+          const descHtml = parseDescriptionTags(subMod.description, subMod.path);
           const descDiv = document.createElement("div");
           descDiv.className = "submod-description";
-          descDiv.innerHTML = subMod.descriptionHtml;
+          descDiv.innerHTML = descHtml;
           infoDiv.appendChild(descDiv);
         }
 
