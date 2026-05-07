@@ -1,10 +1,10 @@
-import { state } from "./js/state.js";
-import { showToast, getUrlParam } from "./js/utils.js";
-import { initTheme } from "./js/theme.js";
-import { loadConfig, renderConfig, saveConfigHandler, toggleCollapse } from "./js/config.js";
-import { addListItem, hideDialog, confirmAddItem, autoSortMods } from "./js/mods.js";
-import { reconnectTerminal, clearTerminal, sendCommands, handleTerminalInput, handleTerminalChange, hideSuggestions } from "./js/terminal.js";
-import { loadServersConfig, loadRuntimeStatus, startServer, stopServer, saveGlobalConfig } from "./js/server-manager.js";
+import { state } from "./state.js";
+import { showToast, getUrlParam } from "./utils.js";
+import { initTheme } from "./theme.js";
+import { loadConfig, renderConfig, saveConfigHandler, toggleCollapse } from "./config.js";
+import { addListItem, hideDialog, confirmAddItem, autoSortMods } from "./mods.js";
+import { reconnectTerminal, clearTerminal, sendCommands, handleTerminalInput, handleTerminalChange, hideSuggestions } from "./terminal.js";
+import { loadServersConfig, loadRuntimeStatus, startServer, stopServer, saveGlobalConfig } from "./server-manager.js";
 
 function switchTab(tabName) {
   document.querySelectorAll(".tab-button").forEach((button) => {
