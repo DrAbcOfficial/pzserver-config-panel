@@ -16,7 +16,7 @@
   --color-bg-orphan: #2a2018;
   --color-bg-drag-over: #253525;
   --color-bg-selected: #2d3b2d;
-  --color-bg-map-enabled: #1a2a1a;
+
   --color-bg-toast-success: #4caf50;
   --color-bg-toast-error: #f44336;
   --color-bg-toast-info: #2196f3;
@@ -154,8 +154,6 @@
   --color-back-btn-bg-hover: rgba(255, 255, 255, 0.2);
   --color-back-btn-text: #fff;
 
-  --color-map-source-text: #666;
-
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-family-mono: "Consolas", "Monaco", "Courier New", monospace;
 }
@@ -178,7 +176,7 @@
   --color-bg-orphan: #fff8e1;
   --color-bg-drag-over: #e8f5e9;
   --color-bg-selected: #e8f5e9;
-  --color-bg-map-enabled: #e8f5e9;
+
   --color-bg-toast-success: #4caf50;
   --color-bg-toast-error: #f44336;
   --color-bg-toast-info: #2196f3;
@@ -316,7 +314,7 @@
   --color-back-btn-bg-hover: rgba(0, 0, 0, 0.12);
   --color-back-btn-text: #333;
 
-  --color-map-source-text: #9e9e9e;
+
 }
 
 /* ===== Theme Toggle ===== */
@@ -1707,88 +1705,37 @@ body.dragging-active .list-item { cursor: grabbing; }
   animation: sortFlash 0.6s ease 2;
 }
 
-/* ===== Available Maps ===== */
-.available-maps-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
+/* ===== Workshop Maps ===== */
+.workshop-maps-container {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-top: 1px solid var(--color-border-primary);
 }
 
-.available-maps-header {
-  font-size: 0.875rem;
+.workshop-maps-title {
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
-.available-maps-list {
+.workshop-map-item {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
   gap: 0.5rem;
 }
 
-.available-map-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--color-bg-input);
-  border: 1px solid var(--color-border-primary);
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  transition: border-color 0.2s, background-color 0.2s;
+.workshop-map-item + .workshop-map-item {
+  border-top: 1px solid var(--color-border-secondary);
 }
 
-.available-map-item.enabled {
-  border-color: var(--color-accent-green);
-  background-color: var(--color-bg-map-enabled);
-}
-
-.available-map-name {
-  flex: 1;
-  font-size: 0.875rem;
+.workshop-map-name {
+  font-size: 0.8125rem;
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  min-width: 0;
   word-break: break-word;
-}
-
-.available-map-source {
-  font-size: 0.6875rem;
-  color: var(--color-map-source-text);
-  white-space: nowrap;
-}
-
-.map-toggle-btn {
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  border: 1px solid var(--color-border-primary);
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.map-toggle-btn.enabled {
-  background-color: var(--color-accent-green);
-  color: white;
-  border-color: var(--color-accent-green);
-}
-
-.map-toggle-btn.enabled:hover {
-  background-color: var(--color-accent-red);
-  border-color: var(--color-accent-red);
-}
-
-.map-toggle-btn.disabled {
-  background-color: var(--color-bg-elevated-3);
-  color: var(--color-text-secondary);
-}
-
-.map-toggle-btn.disabled:hover {
-  background-color: var(--color-accent-green);
-  color: white;
-  border-color: var(--color-accent-green);
 }
 
 /* ===== Dialog ===== */

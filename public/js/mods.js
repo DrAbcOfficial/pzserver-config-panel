@@ -23,14 +23,21 @@ function getModMetaMap() {
 
 function buildSubModTooltip(subMod) {
   const lines = [];
+  lines.push('<span class="tt-label">ID:</span> ' + escapeHtml(subMod.id));
+  if (subMod.description) lines.push('<span class="tt-label">描述:</span> ' + escapeHtml(subMod.description));
   if (subMod.author) lines.push('<span class="tt-label">作者:</span> ' + escapeHtml(subMod.author));
   if (subMod.url) lines.push('<span class="tt-label">主页:</span> <a class="tt-link" href="' + escapeHtml(subMod.url) + '" target="_blank" rel="noopener">' + escapeHtml(subMod.url) + '</a>');
   if (subMod.modversion) lines.push('<span class="tt-label">版本:</span> ' + escapeHtml(subMod.modversion));
+  if (subMod.category && subMod.category.length > 0) lines.push('<span class="tt-label">分类:</span> ' + escapeHtml(subMod.category.join(", ")));
+  if (subMod.require && subMod.require.length > 0) lines.push('<span class="tt-label">依赖:</span> ' + escapeHtml(subMod.require.join(", ")));
+  if (subMod.loadModBefore && subMod.loadModBefore.length > 0) lines.push('<span class="tt-label">需在之前:</span> ' + escapeHtml(subMod.loadModBefore.join(", ")));
+  if (subMod.loadModAfter && subMod.loadModAfter.length > 0) lines.push('<span class="tt-label">需在之后:</span> ' + escapeHtml(subMod.loadModAfter.join(", ")));
+  if (subMod.incompatible && subMod.incompatible.length > 0) lines.push('<span class="tt-label">不兼容:</span> ' + escapeHtml(subMod.incompatible.join(", ")));
   if (subMod.pack && subMod.pack.length > 0) lines.push('<span class="tt-label">Pack:</span> ' + escapeHtml(subMod.pack.join(", ")));
   if (subMod.tiledef && subMod.tiledef.length > 0) lines.push('<span class="tt-label">Tiledef:</span> ' + escapeHtml(subMod.tiledef.join(", ")));
   if (subMod.versionMin) lines.push('<span class="tt-label">最低版本:</span> ' + escapeHtml(subMod.versionMin));
   if (subMod.versionMax) lines.push('<span class="tt-label">最高版本:</span> ' + escapeHtml(subMod.versionMax));
-  return lines.length > 0 ? lines.join("<br>") : "";
+  return lines.join("<br>");
 }
 
 // ===== Mods Rendering =====
@@ -266,6 +273,48 @@ export function renderWorkshopItems() {
       div.appendChild(subModsDiv);
     }
 
+    if (workshopItem.isDownloaded && workshopItem.maps && workshopItem.maps.length > 0) {
+      const mapsDiv = document.createElement("div");
+      mapsDiv.className = "workshop-maps-container";
+
+      const mapsTitle = document.createElement("div");
+      mapsTitle.className = "workshop-maps-title";
+      mapsTitle.textContent = "包含的地图:";
+      mapsDiv.appendChild(mapsTitle);
+
+      workshopItem.maps.forEach((mapName) => {
+        const mapItem = document.createElement("div");
+        mapItem.className = "workshop-map-item";
+
+        const mapNameSpan = document.createElement("span");
+        mapNameSpan.className = "workshop-map-name";
+        mapNameSpan.textContent = mapName;
+        mapItem.appendChild(mapNameSpan);
+
+        const toggleLabel = document.createElement("label");
+        toggleLabel.className = "toggle";
+
+        const toggleInput = document.createElement("input");
+        toggleInput.type = "checkbox";
+        toggleInput.checked = state.mapItems.indexOf(mapName) !== -1;
+        toggleInput.dataset.mapName = mapName;
+        toggleInput.onchange = function() {
+          toggleMapItem(mapName);
+        };
+
+        const toggleSpan = document.createElement("span");
+        toggleSpan.className = "toggle-slider";
+
+        toggleLabel.appendChild(toggleInput);
+        toggleLabel.appendChild(toggleSpan);
+        mapItem.appendChild(toggleLabel);
+
+        mapsDiv.appendChild(mapItem);
+      });
+
+      div.appendChild(mapsDiv);
+    }
+
     container.appendChild(div);
   });
 }
@@ -386,88 +435,7 @@ function renderListEditor(containerId, items, type) {
 
 // ===== Available Maps =====
 
-export function renderAvailableMaps() {
-  const section = document.getElementById("availableMapsSection");
-  const list = document.getElementById("availableMapsList");
-  list.innerHTML = "";
 
-  const mapSet = {};
-  for (let i = 0; i < state.mapItems.length; i++) {
-    mapSet[state.mapItems[i]] = true;
-  }
-
-  const foundMaps = {};
-  for (let i = 0; i < state.workshopItemsData.length; i++) {
-    const wi = state.workshopItemsData[i];
-    if (!wi.isDownloaded || !wi.maps) continue;
-    for (let j = 0; j < wi.maps.length; j++) {
-      const mapName = wi.maps[j];
-      if (!foundMaps[mapName]) {
-        foundMaps[mapName] = [];
-      }
-      foundMaps[mapName].push(wi.id);
-    }
-  }
-
-  const mapNames = Object.keys(foundMaps);
-  if (mapNames.length === 0) {
-    section.style.display = "none";
-    return;
-  }
-
-  section.style.display = "block";
-
-  for (let i = 0; i < mapNames.length; i++) {
-    const mapName = mapNames[i];
-    const sourceIds = foundMaps[mapName];
-    const isEnabled = mapSet[mapName];
-
-    const item = document.createElement("div");
-    item.className = "available-map-item" + (isEnabled ? " enabled" : "");
-
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "available-map-name";
-    nameSpan.textContent = mapName;
-    item.appendChild(nameSpan);
-
-    const sourceSpan = document.createElement("span");
-    sourceSpan.className = "available-map-source";
-    sourceSpan.textContent = "来自: " + sourceIds.join(", ");
-    item.appendChild(sourceSpan);
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.className = "map-toggle-btn " + (isEnabled ? "enabled" : "disabled");
-    toggleBtn.textContent = isEnabled ? "已启用" : "启用";
-    toggleBtn.onclick = (function(map) {
-      return function() {
-        toggleMapItem(map);
-
-        let currentlyEnabled = false;
-        for (let k = 0; k < state.mapItems.length; k++) {
-          if (state.mapItems[k] === map) { currentlyEnabled = true; break; }
-        }
-        const allItems = list.querySelectorAll(".available-map-item");
-        for (let k = 0; k < allItems.length; k++) {
-          if (allItems[k].querySelector(".available-map-name").textContent === map) {
-            if (currentlyEnabled) {
-              allItems[k].classList.add("enabled");
-            } else {
-              allItems[k].classList.remove("enabled");
-            }
-            const b = allItems[k].querySelector(".map-toggle-btn");
-            if (b) {
-              b.textContent = currentlyEnabled ? "已启用" : "启用";
-              b.className = "map-toggle-btn " + (currentlyEnabled ? "enabled" : "disabled");
-            }
-          }
-        }
-      };
-    })(mapName);
-    item.appendChild(toggleBtn);
-
-    list.appendChild(item);
-  }
-}
 
 function toggleMapItem(mapName) {
   const idx = state.mapItems.indexOf(mapName);
