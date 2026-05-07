@@ -22,15 +22,41 @@ function getModMetaMap() {
 
 // ===== Tooltip =====
 
+function formatListField(label, list) {
+  if (!list || list.length === 0) return "";
+  return '<span class="tt-label">' + label + ':</span> ' + escapeHtml(list.join(", "));
+}
+
 function buildSubModTooltip(subMod) {
   const lines = [];
   if (subMod.author) lines.push('<span class="tt-label">作者:</span> ' + escapeHtml(subMod.author));
   if (subMod.url) lines.push('<span class="tt-label">主页:</span> <a class="tt-link" href="' + escapeHtml(subMod.url) + '" target="_blank" rel="noopener">' + escapeHtml(subMod.url) + '</a>');
   if (subMod.modversion) lines.push('<span class="tt-label">版本:</span> ' + escapeHtml(subMod.modversion));
-  if (subMod.pack && subMod.pack.length > 0) lines.push('<span class="tt-label">Pack:</span> ' + escapeHtml(subMod.pack.join(", ")));
-  if (subMod.tiledef && subMod.tiledef.length > 0) lines.push('<span class="tt-label">Tiledef:</span> ' + escapeHtml(subMod.tiledef.join(", ")));
+
+  const catLine = formatListField("分类", subMod.category);
+  if (catLine) lines.push(catLine);
+
+  const reqLine = formatListField("依赖", subMod.require);
+  if (reqLine) lines.push(reqLine);
+
+  const beforeLine = formatListField("需在之前加载", subMod.loadModBefore);
+  if (beforeLine) lines.push(beforeLine);
+
+  const afterLine = formatListField("需在之后加载", subMod.loadModAfter);
+  if (afterLine) lines.push(afterLine);
+
+  const incLine = formatListField("不兼容", subMod.incompatible);
+  if (incLine) lines.push(incLine);
+
+  const packLine = formatListField("Pack", subMod.pack);
+  if (packLine) lines.push(packLine);
+
+  const tiledefLine = formatListField("Tiledef", subMod.tiledef);
+  if (tiledefLine) lines.push(tiledefLine);
+
   if (subMod.versionMin) lines.push('<span class="tt-label">最低版本:</span> ' + escapeHtml(subMod.versionMin));
   if (subMod.versionMax) lines.push('<span class="tt-label">最高版本:</span> ' + escapeHtml(subMod.versionMax));
+
   return lines.join("<br>");
 }
 
@@ -44,16 +70,171 @@ export function renderMap() {
   renderListEditor("mapList", state.mapItems, "Map");
 }
 
+// ===== SubMod Card Rendering =====
+
+function renderSubModCard(subMod) {
+  const subModDiv = document.createElement("div");
+  subModDiv.className = "submod-item";
+
+  if (subMod.icon) {
+    const iconImg = document.createElement("img");
+    iconImg.className = "submod-icon";
+    iconImg.src = "/api/workshop-poster?rel=" + encodeURIComponent(subMod.icon);
+    iconImg.alt = "";
+    iconImg.onerror = function() { this.style.display = "none"; };
+    subModDiv.appendChild(iconImg);
+  }
+
+  if (subMod.poster) {
+    const posterImg = document.createElement("img");
+    posterImg.className = "submod-poster";
+    posterImg.src = "/api/workshop-poster?rel=" + encodeURIComponent(subMod.poster);
+    posterImg.alt = subMod.name;
+    posterImg.onerror = function() { this.style.display = "none"; };
+    subModDiv.appendChild(posterImg);
+  }
+
+  const infoDiv = document.createElement("div");
+  infoDiv.className = "submod-info";
+
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "submod-name";
+  nameDiv.textContent = subMod.name;
+  const tooltipText = buildSubModTooltip(subMod);
+  if (tooltipText) {
+    nameDiv.classList.add("has-tooltip");
+    const tooltipDiv = document.createElement("div");
+    tooltipDiv.className = "submod-tooltip";
+    tooltipDiv.innerHTML = tooltipText;
+    nameDiv.appendChild(tooltipDiv);
+  }
+  infoDiv.appendChild(nameDiv);
+
+  if (subMod.description) {
+    const descHtml = parseDescriptionTags(subMod.description, subMod.path);
+    const descDiv = document.createElement("div");
+    descDiv.className = "submod-description";
+    descDiv.innerHTML = descHtml;
+    infoDiv.appendChild(descDiv);
+  }
+
+  const idDiv = document.createElement("div");
+  idDiv.className = "submod-id";
+  idDiv.textContent = "ID: " + subMod.id;
+  infoDiv.appendChild(idDiv);
+
+  if (subMod.category && subMod.category.length > 0) {
+    const tagsDiv = document.createElement("div");
+    tagsDiv.className = "submod-categories";
+    subMod.category.forEach((cat) => {
+      const tag = document.createElement("span");
+      tag.className = "category-tag";
+      tag.textContent = cat;
+      tagsDiv.appendChild(tag);
+    });
+    infoDiv.appendChild(tagsDiv);
+  }
+
+  if (subMod.require && subMod.require.length > 0) {
+    const reqDiv = document.createElement("div");
+    reqDiv.className = "submod-meta-item require";
+    reqDiv.innerHTML = '<span class="meta-label">依赖:</span> ' + escapeHtml(subMod.require.join(", "));
+    infoDiv.appendChild(reqDiv);
+  }
+
+  if (subMod.loadModBefore && subMod.loadModBefore.length > 0) {
+    const beforeDiv = document.createElement("div");
+    beforeDiv.className = "submod-meta-item load-before";
+    beforeDiv.innerHTML = '<span class="meta-label">需在之前:</span> ' + escapeHtml(subMod.loadModBefore.join(", "));
+    infoDiv.appendChild(beforeDiv);
+  }
+
+  if (subMod.loadModAfter && subMod.loadModAfter.length > 0) {
+    const afterDiv = document.createElement("div");
+    afterDiv.className = "submod-meta-item load-after";
+    afterDiv.innerHTML = '<span class="meta-label">需在之后:</span> ' + escapeHtml(subMod.loadModAfter.join(", "));
+    infoDiv.appendChild(afterDiv);
+  }
+
+  if (subMod.incompatible && subMod.incompatible.length > 0) {
+    const incDiv = document.createElement("div");
+    incDiv.className = "submod-meta-item incompatible";
+    incDiv.innerHTML = '<span class="meta-label">不兼容:</span> ' + escapeHtml(subMod.incompatible.join(", "));
+    infoDiv.appendChild(incDiv);
+  }
+
+  const toggleDiv = document.createElement("div");
+  toggleDiv.className = "submod-toggle";
+
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "toggle";
+
+  const toggleInput = document.createElement("input");
+  toggleInput.type = "checkbox";
+
+  const isInMods = state.modsItems.some(function(modId) {
+    const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
+    return cleanModId === subMod.id;
+  });
+  toggleInput.checked = isInMods;
+  toggleInput.dataset.submodId = subMod.id;
+  toggleInput.onchange = function() {
+    const isChecked = this.checked;
+    const submodId = this.dataset.submodId;
+
+    if (isChecked) {
+      ensureDependencies(submodId);
+
+      const exists = state.modsItems.some(function(modId) {
+        const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
+        return cleanModId === submodId;
+      });
+
+      if (!exists) {
+        const hasBackslash = state.modsItems.some(function(modId) { return modId.startsWith("\\"); });
+        const modIdToAdd = hasBackslash ? "\\" + submodId : submodId;
+        state.modsItems.push(modIdToAdd);
+      }
+
+      const conflicts = checkAllIncompatibilities(submodId);
+      if (conflicts.length > 0) {
+        showToast("警告: 与以下模组不兼容: " + conflicts.join(", "), "error");
+      }
+    } else {
+      const idx = state.modsItems.findIndex(function(modId) {
+        const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
+        return cleanModId === submodId;
+      });
+
+      if (idx !== -1) {
+        state.modsItems.splice(idx, 1);
+      }
+    }
+
+    renderMods();
+    state.isDirty = true;
+  };
+
+  const toggleSpan = document.createElement("span");
+  toggleSpan.className = "toggle-slider";
+
+  toggleLabel.appendChild(toggleInput);
+  toggleLabel.appendChild(toggleSpan);
+  toggleDiv.appendChild(toggleLabel);
+  infoDiv.appendChild(toggleDiv);
+
+  subModDiv.appendChild(infoDiv);
+  return subModDiv;
+}
+
 // ===== Workshop Items Rendering =====
 
 export function renderWorkshopItems() {
   const container = document.getElementById("workshopItemsList");
   container.innerHTML = "";
 
-  const modMeta = getModMetaMap();
-
-  state.workshopItemsItems.forEach((itemId, index) => {
-    const workshopItem = state.workshopItemsData.find((wi) => wi.id === itemId) || { id: itemId, isDownloaded: false, subMods: [], maps: [] };
+  state.workshopItemsItems.forEach(function(itemId, index) {
+    const workshopItem = state.workshopItemsData.find(function(wi) { return wi.id === itemId; }) || { id: itemId, isDownloaded: false, subMods: [], maps: [] };
     const div = document.createElement("div");
     div.className = "workshop-item";
 
@@ -87,7 +268,7 @@ export function renderWorkshopItems() {
     upBtn.textContent = "↑";
     upBtn.title = "上移";
     upBtn.disabled = index === 0;
-    upBtn.onclick = () => moveListItem("WorkshopItems", index, -1);
+    upBtn.onclick = function() { moveListItem("WorkshopItems", index, -1); };
     buttonsDiv.appendChild(upBtn);
 
     const downBtn = document.createElement("button");
@@ -95,13 +276,13 @@ export function renderWorkshopItems() {
     downBtn.textContent = "↓";
     downBtn.title = "下移";
     downBtn.disabled = index === state.workshopItemsItems.length - 1;
-    downBtn.onclick = () => moveListItem("WorkshopItems", index, 1);
+    downBtn.onclick = function() { moveListItem("WorkshopItems", index, 1); };
     buttonsDiv.appendChild(downBtn);
 
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "list-button delete";
     deleteBtn.textContent = "删除";
-    deleteBtn.onclick = () => deleteListItem("WorkshopItems", index);
+    deleteBtn.onclick = function() { deleteListItem("WorkshopItems", index); };
     buttonsDiv.appendChild(deleteBtn);
 
     headerDiv.appendChild(buttonsDiv);
@@ -111,159 +292,8 @@ export function renderWorkshopItems() {
       const subModsDiv = document.createElement("div");
       subModsDiv.className = "submods-container";
 
-      workshopItem.subMods.forEach((subMod) => {
-        const subModDiv = document.createElement("div");
-        subModDiv.className = "submod-item";
-
-        if (subMod.icon) {
-          const iconImg = document.createElement("img");
-          iconImg.className = "submod-icon";
-          iconImg.src = "/api/workshop-poster?rel=" + encodeURIComponent(subMod.icon);
-          iconImg.alt = "";
-          iconImg.onerror = function() { this.style.display = "none"; };
-          subModDiv.appendChild(iconImg);
-        }
-
-        if (subMod.poster) {
-          const posterImg = document.createElement("img");
-          posterImg.className = "submod-poster";
-          posterImg.src = "/api/workshop-poster?rel=" + encodeURIComponent(subMod.poster);
-          posterImg.alt = subMod.name;
-          posterImg.onerror = function() { this.style.display = "none"; };
-          subModDiv.appendChild(posterImg);
-        }
-
-        const infoDiv = document.createElement("div");
-        infoDiv.className = "submod-info";
-
-        const nameDiv = document.createElement("div");
-        nameDiv.className = "submod-name";
-        nameDiv.textContent = subMod.name;
-        const tooltipText = buildSubModTooltip(subMod);
-        if (tooltipText) {
-          nameDiv.classList.add("has-tooltip");
-          const tooltipDiv = document.createElement("div");
-          tooltipDiv.className = "submod-tooltip";
-          tooltipDiv.innerHTML = tooltipText;
-          nameDiv.appendChild(tooltipDiv);
-        }
-        infoDiv.appendChild(nameDiv);
-
-        if (subMod.description) {
-          const descHtml = parseDescriptionTags(subMod.description, subMod.path);
-          const descDiv = document.createElement("div");
-          descDiv.className = "submod-description";
-          descDiv.innerHTML = descHtml;
-          infoDiv.appendChild(descDiv);
-        }
-
-        const idDiv = document.createElement("div");
-        idDiv.className = "submod-id";
-        idDiv.textContent = "ID: " + subMod.id;
-        infoDiv.appendChild(idDiv);
-
-        if (subMod.category && subMod.category.length > 0) {
-          const tagsDiv = document.createElement("div");
-          tagsDiv.className = "submod-categories";
-          subMod.category.forEach((cat) => {
-            const tag = document.createElement("span");
-            tag.className = "category-tag";
-            tag.textContent = cat;
-            tagsDiv.appendChild(tag);
-          });
-          infoDiv.appendChild(tagsDiv);
-        }
-
-        if (subMod.require && subMod.require.length > 0) {
-          const reqDiv = document.createElement("div");
-          reqDiv.className = "submod-meta-item require";
-          reqDiv.innerHTML = '<span class="meta-label">依赖:</span> ' + escapeHtml(subMod.require.join(", "));
-          infoDiv.appendChild(reqDiv);
-        }
-
-        if (subMod.loadModBefore && subMod.loadModBefore.length > 0) {
-          const beforeDiv = document.createElement("div");
-          beforeDiv.className = "submod-meta-item load-before";
-          beforeDiv.innerHTML = '<span class="meta-label">需在之前:</span> ' + escapeHtml(subMod.loadModBefore.join(", "));
-          infoDiv.appendChild(beforeDiv);
-        }
-
-        if (subMod.loadModAfter && subMod.loadModAfter.length > 0) {
-          const afterDiv = document.createElement("div");
-          afterDiv.className = "submod-meta-item load-after";
-          afterDiv.innerHTML = '<span class="meta-label">需在之后:</span> ' + escapeHtml(subMod.loadModAfter.join(", "));
-          infoDiv.appendChild(afterDiv);
-        }
-
-        if (subMod.incompatible && subMod.incompatible.length > 0) {
-          const incDiv = document.createElement("div");
-          incDiv.className = "submod-meta-item incompatible";
-          incDiv.innerHTML = '<span class="meta-label">不兼容:</span> ' + escapeHtml(subMod.incompatible.join(", "));
-          infoDiv.appendChild(incDiv);
-        }
-
-        const toggleDiv = document.createElement("div");
-        toggleDiv.className = "submod-toggle";
-
-        const toggleLabel = document.createElement("label");
-        toggleLabel.className = "toggle";
-
-        const toggleInput = document.createElement("input");
-        toggleInput.type = "checkbox";
-
-        const isInMods = state.modsItems.some(modId => {
-          const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
-          return cleanModId === subMod.id;
-        });
-        toggleInput.checked = isInMods;
-        toggleInput.dataset.submodId = subMod.id;
-        toggleInput.onchange = function() {
-          const isChecked = this.checked;
-          const submodId = this.dataset.submodId;
-
-          if (isChecked) {
-            ensureDependencies(submodId);
-
-            const exists = state.modsItems.some(modId => {
-              const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
-              return cleanModId === submodId;
-            });
-
-            if (!exists) {
-              const hasBackslash = state.modsItems.some(modId => modId.startsWith("\\"));
-              const modIdToAdd = hasBackslash ? "\\" + submodId : submodId;
-              state.modsItems.push(modIdToAdd);
-            }
-
-            const conflicts = checkAllIncompatibilities(submodId);
-            if (conflicts.length > 0) {
-              showToast("警告: 与以下模组不兼容: " + conflicts.join(", "), "error");
-            }
-          } else {
-            const idx = state.modsItems.findIndex(modId => {
-              const cleanModId = modId.startsWith("\\") ? modId.substring(1) : modId;
-              return cleanModId === submodId;
-            });
-
-            if (idx !== -1) {
-              state.modsItems.splice(idx, 1);
-            }
-          }
-
-          renderMods();
-          state.isDirty = true;
-        };
-
-        const toggleSpan = document.createElement("span");
-        toggleSpan.className = "toggle-slider";
-
-        toggleLabel.appendChild(toggleInput);
-        toggleLabel.appendChild(toggleSpan);
-        toggleDiv.appendChild(toggleLabel);
-        infoDiv.appendChild(toggleDiv);
-
-        subModDiv.appendChild(infoDiv);
-        subModsDiv.appendChild(subModDiv);
+      workshopItem.subMods.forEach(function(subMod) {
+        subModsDiv.appendChild(renderSubModCard(subMod));
       });
 
       div.appendChild(subModsDiv);
@@ -278,7 +308,7 @@ export function renderWorkshopItems() {
       mapsTitle.textContent = "包含的地图:";
       mapsDiv.appendChild(mapsTitle);
 
-      workshopItem.maps.forEach((mapName) => {
+      workshopItem.maps.forEach(function(mapName) {
         const mapItem = document.createElement("div");
         mapItem.className = "workshop-map-item";
 
