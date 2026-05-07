@@ -33,8 +33,15 @@
   --color-text-primary: #e0e0e0;
   --color-text-secondary: #a0a0a0;
   --color-text-muted: #666;
+  --color-text-heading: #ffffff;
   --color-text-white: #ffffff;
   --color-text-accent-green: #4caf50;
+
+  --color-shadow-dialog: rgba(0, 0, 0, 0.5);
+  --color-shadow-toast: rgba(0, 0, 0, 0.3);
+  --color-shadow-card: rgba(0, 0, 0, 0.3);
+  --color-shadow-tooltip: rgba(0, 0, 0, 0.5);
+  --color-tooltip-dotted: #888;
 
   --color-border-primary: #404040;
   --color-border-light: rgba(255, 255, 255, 0.1);
@@ -188,8 +195,15 @@
   --color-text-primary: #212121;
   --color-text-secondary: #616161;
   --color-text-muted: #9e9e9e;
+  --color-text-heading: #1a1a1a;
   --color-text-white: #ffffff;
   --color-text-accent-green: #2e7d32;
+
+  --color-shadow-dialog: rgba(0, 0, 0, 0.15);
+  --color-shadow-toast: rgba(0, 0, 0, 0.15);
+  --color-shadow-card: rgba(0, 0, 0, 0.08);
+  --color-shadow-tooltip: rgba(0, 0, 0, 0.25);
+  --color-tooltip-dotted: #aaa;
 
   --color-border-primary: #e0e0e0;
   --color-border-light: rgba(0, 0, 0, 0.1);
@@ -458,7 +472,7 @@ header {
 
 .github-button {
   background-color: var(--color-bg-elevated-3);
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   border: none;
   padding: 0.625rem 1.5rem;
   border-radius: 4px;
@@ -542,7 +556,7 @@ main {
 
 .tab-button.active {
   background-color: var(--color-bg-elevated-2);
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   border-color: var(--color-accent-green);
 }
 
@@ -645,7 +659,7 @@ main {
 
 .server-item-name {
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
 }
 
 .server-status-badge {
@@ -963,7 +977,7 @@ main {
 .path-label {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
 }
 
 .path-description {
@@ -1141,7 +1155,7 @@ main {
 .group-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   margin: 0;
 }
 
@@ -1166,7 +1180,7 @@ main {
 
 .section-header h2 {
   font-size: 1.25rem;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   margin: 0;
 }
 
@@ -1205,7 +1219,7 @@ main {
 .item-label {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
 }
 
 .item-label.unknown { color: var(--color-text-primary); }
@@ -1466,7 +1480,7 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
 .submod-name {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   word-break: break-word;
   position: relative;
   display: inline-block;
@@ -1474,7 +1488,7 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
 
 .submod-name.has-tooltip {
   cursor: help;
-  border-bottom: 1px dotted #888;
+  border-bottom: 1px dotted var(--color-tooltip-dotted);
 }
 
 .submod-tooltip {
@@ -1491,7 +1505,7 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
   font-weight: 400;
   color: var(--color-tooltip-text);
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px var(--color-shadow-tooltip);
   line-height: 1.6;
   margin-top: 4px;
 }
@@ -1799,7 +1813,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 .dialog-content {
   background-color: var(--color-bg-secondary);
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px var(--color-shadow-dialog);
   width: 90%;
   max-width: 400px;
   transform: translateY(-20px);
@@ -1822,7 +1836,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 
 .dialog-header h3 {
   font-size: 1.125rem;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   margin: 0;
 }
 
@@ -1861,7 +1875,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 .dialog-input-group label {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
 }
 
 .dialog-input {
@@ -1956,7 +1970,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 .toast {
   padding: 12px 20px;
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--color-shadow-toast);
   font-size: 0.9375rem;
   font-weight: 500;
   display: flex;
@@ -2021,7 +2035,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 .global-settings-btn {
   background-color: var(--color-bg-elevated-3);
   border: 1px solid var(--color-border-primary);
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
@@ -2066,7 +2080,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 .server-card:hover {
   background-color: var(--color-bg-tertiary);
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px var(--color-shadow-card);
 }
 
 .server-card.running {
@@ -2086,7 +2100,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 }
 
 .server-card-name {
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   font-size: 20px;
   font-weight: 500;
   margin: 0;
@@ -2149,7 +2163,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 
 .server-card-btn.secondary {
   background-color: var(--color-bg-button-secondary);
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
 }
 
 .server-card-btn.secondary:hover { background-color: var(--color-bg-button-secondary-hover); }
@@ -2193,7 +2207,7 @@ body.dragging-active .list-item { cursor: grabbing; }
 }
 
 .empty-state h3 {
-  color: var(--color-text-white);
+  color: var(--color-text-heading);
   font-size: 20px;
   margin-bottom: 12px;
 }
