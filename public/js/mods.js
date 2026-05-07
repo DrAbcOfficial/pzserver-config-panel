@@ -24,15 +24,9 @@ function getModMetaMap() {
 function buildSubModTooltip(subMod) {
   const lines = [];
   lines.push('<span class="tt-label">ID:</span> ' + escapeHtml(subMod.id));
-  if (subMod.description) lines.push('<span class="tt-label">描述:</span> ' + escapeHtml(subMod.description));
   if (subMod.author) lines.push('<span class="tt-label">作者:</span> ' + escapeHtml(subMod.author));
   if (subMod.url) lines.push('<span class="tt-label">主页:</span> <a class="tt-link" href="' + escapeHtml(subMod.url) + '" target="_blank" rel="noopener">' + escapeHtml(subMod.url) + '</a>');
   if (subMod.modversion) lines.push('<span class="tt-label">版本:</span> ' + escapeHtml(subMod.modversion));
-  if (subMod.category && subMod.category.length > 0) lines.push('<span class="tt-label">分类:</span> ' + escapeHtml(subMod.category.join(", ")));
-  if (subMod.require && subMod.require.length > 0) lines.push('<span class="tt-label">依赖:</span> ' + escapeHtml(subMod.require.join(", ")));
-  if (subMod.loadModBefore && subMod.loadModBefore.length > 0) lines.push('<span class="tt-label">需在之前:</span> ' + escapeHtml(subMod.loadModBefore.join(", ")));
-  if (subMod.loadModAfter && subMod.loadModAfter.length > 0) lines.push('<span class="tt-label">需在之后:</span> ' + escapeHtml(subMod.loadModAfter.join(", ")));
-  if (subMod.incompatible && subMod.incompatible.length > 0) lines.push('<span class="tt-label">不兼容:</span> ' + escapeHtml(subMod.incompatible.join(", ")));
   if (subMod.pack && subMod.pack.length > 0) lines.push('<span class="tt-label">Pack:</span> ' + escapeHtml(subMod.pack.join(", ")));
   if (subMod.tiledef && subMod.tiledef.length > 0) lines.push('<span class="tt-label">Tiledef:</span> ' + escapeHtml(subMod.tiledef.join(", ")));
   if (subMod.versionMin) lines.push('<span class="tt-label">最低版本:</span> ' + escapeHtml(subMod.versionMin));
